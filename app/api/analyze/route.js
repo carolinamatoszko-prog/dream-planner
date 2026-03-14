@@ -27,7 +27,8 @@ Responde com este JSON exato:
   "categoryIcon": "um único emoji representativo",
   "costMin": número inteiro em euros (custo mínimo realista),
   "costMax": número inteiro em euros (custo máximo realista),
-  "months": número inteiro de meses necessários para preparação,
+  "timeValue": número inteiro que representa a duração de preparação,
+  "timeUnit": "horas" | "dias" | "semanas" | "meses" | "anos",
   "costNote": "frase curta e motivadora sobre o custo (max 8 palavras)",
   "timeNote": "frase curta sobre o tempo (max 8 palavras)",
   "steps": [
@@ -37,11 +38,19 @@ Responde com este JSON exato:
   ]
 }
 
-Regras:
+Regras gerais:
 - Os valores de custo devem ser REALISTAS para Portugal/Europa em 2025
 - Os passos devem ser ESPECÍFICOS para este sonho exato, não genéricos
 - Responde em português europeu
-- Responde APENAS com o JSON, sem mais nada`;
+- Responde APENAS com o JSON, sem mais nada
+
+Calibração do tempo de preparação — segue RIGOROSAMENTE esta escala:
+- Tarefas imediatas (fazer um bolo, cozinhar uma receita, dar um passeio): 1–3 horas → timeUnit: "horas"
+- Tarefas de um dia (montar um móvel, limpar a casa a fundo, criar um perfil online): 1–2 dias → timeUnit: "dias"
+- Projetos curtos (aprender uma música simples, ler um livro, fazer uma caminhada de trilho): 1–3 semanas → timeUnit: "semanas"
+- Projetos médios (tirar a carta de condução, preparar uma viagem europeia, perder 5 kg): 2–6 meses → timeUnit: "meses"
+- Projetos longos (comprar casa, abrir um negócio, fazer um mestrado): 1–5 anos → timeUnit: "anos"
+Nunca uses "meses" para algo que se faz em horas ou dias. Sê honesto e preciso.`;
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -79,7 +88,8 @@ Regras:
       categoryIcon: parsed.categoryIcon,
       cost: costFormatted,
       costNote: parsed.costNote,
-      months: parsed.months,
+      timeValue: parsed.timeValue,
+      timeUnit: parsed.timeUnit,
       timeNote: parsed.timeNote,
       steps: parsed.steps,
     });
