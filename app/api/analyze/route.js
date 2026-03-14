@@ -23,12 +23,11 @@ Sonho: "${dream}"
 
 Responde com este JSON exato:
 {
-  "categoryLabel": "nome curto da categoria do sonho (ex: Viagem Internacional, Empreendedorismo, Imóvel Próprio, etc.)",
+  "categoryLabel": "nome curto da categoria do sonho (ex: Viagem Internacional, Empreendedorismo, etc.)",
   "categoryIcon": "um único emoji representativo",
   "costMin": número inteiro em euros (custo mínimo realista),
   "costMax": número inteiro em euros (custo máximo realista),
-  "timeValue": número inteiro que representa a duração de preparação,
-  "timeUnit": uma string de entre estas opções: "horas", "dias", "semanas", "meses", "anos",
+  "months": número decimal representando meses de preparação (usa frações: 0.07 para 2 horas, 0.25 para 1 semana, 0.5 para 2 semanas, 1 para 1 mês, 6 para 6 meses, 24 para 2 anos),
   "costNote": "frase curta e motivadora sobre o custo (max 8 palavras)",
   "timeNote": "frase curta sobre o tempo (max 8 palavras)",
   "steps": [
@@ -38,19 +37,21 @@ Responde com este JSON exato:
   ]
 }
 
-Regras gerais:
-- Os valores de custo devem ser REALISTAS para Portugal/Europa em 2025
-- Os passos devem ser ESPECÍFICOS para este sonho exato, não genéricos
-- Responde em português europeu
+Regras:
+- Custos REALISTAS para o Brasil/França em 2025
+- Passos ESPECÍFICOS para este sonho, não genéricos
+- Responde em português do Brasil
 - Responde APENAS com o JSON, sem mais nada
 
-Calibração do tempo de preparação — segue RIGOROSAMENTE esta escala:
-- Tarefas imediatas (fazer um bolo, cozinhar uma receita, dar um passeio): 1–3 horas → timeUnit: "horas"
-- Tarefas de um dia (montar um móvel, limpar a casa a fundo, criar um perfil online): 1–2 dias → timeUnit: "dias"
-- Projetos curtos (aprender uma música simples, ler um livro, fazer uma caminhada de trilho): 1–3 semanas → timeUnit: "semanas"
-- Projetos médios (tirar a carta de condução, preparar uma viagem europeia, perder 5 kg): 2–6 meses → timeUnit: "meses"
-- Projetos longos (comprar casa, abrir um negócio, fazer um mestrado): 1–5 anos → timeUnit: "anos"
-Nunca uses "meses" para algo que se faz em horas ou dias. Sê honesto e preciso.`;
+Calibração de "months" — valores de referência obrigatórios:
+- Fazer um bolo, cozinhar: months: 0.07  (≈ 2 horas)
+- Tarefa de um dia: months: 0.03  (≈ 1 dia)
+- 1 semana de preparação: months: 0.25
+- 2 semanas: months: 0.5
+- 1 mês: months: 1
+- 6 meses: months: 6
+- 1 ano: months: 12
+- 2 anos: months: 24`;
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -83,20 +84,14 @@ Nunca uses "meses" para algo que se faz em horas ou dias. Sê honesto e preciso.
         ? parsed.costMin.toLocaleString("pt-PT") + " €"
         : parsed.costMin.toLocaleString("pt-PT") + " – " + parsed.costMax.toLocaleString("pt-PT") + " €";
 
-    const validUnits = ["horas", "dias", "semanas", "meses", "anos"];
-    const timeUnit  = validUnits.includes(parsed.timeUnit) ? parsed.timeUnit : "meses";
-    const timeValue = (function() {
-      const v = parseInt(parsed.timeValue ?? parsed.months, 10);
-      return v > 0 ? v : 1;
-    })();
+    const months = parseFloat(parsed.months) || 1;
 
     return Response.json({
       categoryLabel: parsed.categoryLabel,
       categoryIcon: parsed.categoryIcon,
       cost: costFormatted,
       costNote: parsed.costNote,
-      timeValue,
-      timeUnit,
+      months,
       timeNote: parsed.timeNote,
       steps: parsed.steps,
     });
